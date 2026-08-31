@@ -5,7 +5,7 @@ on:
     branches: [main]
   workflow_dispatch:
   repository_dispatch:
-    types: [atlas-updated, local-ai-updated]
+    types: [atlas-updated, local-ai-updated, hollow-square-updated]
 
 permissions:
   contents: read
@@ -38,6 +38,13 @@ jobs:
           ref: main
           path: local-ai-source
 
+      - name: Check out the independent Hollow Square source
+        uses: actions/checkout@v4
+        with:
+          repository: jjjhenriksen/hollow-square
+          ref: main
+          path: hollow-square-source
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -55,9 +62,11 @@ jobs:
         run: |
           mkdir -p site/atlas
           mkdir -p site/local-ai
+          mkdir -p site/hollow-square
           cp -R atlas-source/dist/. site/atlas/
           cp -R local-ai-source/presentation/. site/local-ai/
-          cp -R index.html styles.css hollow-square CNAME .nojekyll site/
+          cp -R hollow-square-source/. site/hollow-square/
+          cp -R index.html styles.css CNAME .nojekyll site/
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
