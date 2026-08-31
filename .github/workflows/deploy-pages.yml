@@ -29,7 +29,6 @@ jobs:
           repository: jjjhenriksen/shapenote-atlas
           ref: main
           path: atlas-source
-          token: ${{ secrets.ATLAS_READ_TOKEN }}
 
       - name: Check out the independent Local AI source
         uses: actions/checkout@v4
