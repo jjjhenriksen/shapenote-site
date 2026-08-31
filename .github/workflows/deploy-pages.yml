@@ -1,0 +1,66 @@
+name: Build and deploy Shape Note site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  repository_dispatch:
+    types: [atlas-updated]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the site hub
+        uses: actions/checkout@v4
+
+      - name: Check out the independent Atlas source
+        uses: actions/checkout@v4
+        with:
+          repository: jjjhenriksen/sacred-harp-dashboard
+          ref: main
+          path: atlas-source
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: atlas-source/package-lock.json
+
+      - name: Build the Atlas for its publication path
+        working-directory: atlas-source
+        run: |
+          npm ci
+          npm run build -- --base=/atlas/
+
+      - name: Assemble the publication
+        run: |
+          mkdir -p site/atlas
+          cp -R atlas-source/dist/. site/atlas/
+          cp -R index.html styles.css local-ai hollow-square CNAME .nojekyll site/
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,65 @@
+:root {
+  color: #f3ead8;
+  background: #17251f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-synthesis: none;
+  --pine: #17251f;
+  --ink: #f3ead8;
+  --muted: #b7b8a9;
+  --brass: #d7a95b;
+  --line: rgba(243, 234, 216, 0.2);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: radial-gradient(circle at 85% 10%, rgba(93, 126, 100, 0.22), transparent 32rem), var(--pine);
+}
+
+a { color: inherit; }
+
+.shell { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 26px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.wordmark { color: var(--ink); font-size: 1.05rem; text-decoration: none; letter-spacing: 0.02em; }
+.eyebrow, .kicker, .card-number { color: var(--brass); text-transform: uppercase; letter-spacing: 0.15em; font: 0.68rem/1.4 Arial, sans-serif; }
+
+.intro { max-width: 780px; padding: clamp(80px, 13vw, 150px) 0 80px; }
+.kicker { margin: 0 0 22px; }
+h1, h2, p { margin-top: 0; }
+h1 { max-width: 780px; margin-bottom: 26px; font-size: clamp(3.2rem, 8vw, 7rem); font-weight: 400; line-height: 0.93; letter-spacing: -0.055em; }
+.lede { max-width: 620px; margin-bottom: 0; color: var(--muted); font-size: clamp(1.1rem, 2vw, 1.35rem); line-height: 1.55; }
+
+.project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding-bottom: 100px; }
+.project-card { min-height: 390px; display: flex; flex-direction: column; padding: 26px; border: 1px solid var(--line); text-decoration: none; transition: transform 180ms ease, border-color 180ms ease, background 180ms ease; }
+.project-card:hover, .project-card:focus-visible { transform: translateY(-5px); border-color: var(--brass); background: rgba(243, 234, 216, 0.06); outline: none; }
+.atlas-card { background: linear-gradient(145deg, rgba(84, 123, 91, 0.32), rgba(23, 37, 31, 0.1)); }
+.ai-card { background: linear-gradient(145deg, rgba(173, 119, 60, 0.2), rgba(23, 37, 31, 0.1)); }
+.game-card { background: linear-gradient(145deg, rgba(83, 70, 92, 0.34), rgba(23, 37, 31, 0.1)); }
+.project-card h2 { max-width: 250px; margin: 70px 0 18px; font-size: clamp(2rem, 3vw, 3rem); font-weight: 400; line-height: 0.98; letter-spacing: -0.04em; }
+.project-card p { color: var(--muted); line-height: 1.55; }
+.card-link { margin-top: auto; color: var(--brass); font: 0.82rem Arial, sans-serif; letter-spacing: 0.04em; }
+
+.footer { display: flex; justify-content: space-between; gap: 24px; padding: 22px 0 34px; border-top: 1px solid var(--line); color: var(--muted); font: 0.78rem Arial, sans-serif; }
+.footer a { color: var(--ink); text-underline-offset: 4px; }
+
+@media (max-width: 760px) {
+  .shell { width: min(100% - 32px, 620px); }
+  .masthead { display: block; }
+  .eyebrow { display: block; margin-top: 8px; }
+  .intro { padding: 88px 0 60px; }
+  .project-grid { grid-template-columns: 1fr; padding-bottom: 70px; }
+  .project-card { min-height: 310px; }
+  .project-card h2 { margin-top: 48px; }
+  .footer { display: block; }
+  .footer a { display: block; margin-top: 12px; }
+}
