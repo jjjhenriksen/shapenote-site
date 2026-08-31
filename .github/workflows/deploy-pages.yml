@@ -26,9 +26,10 @@ jobs:
       - name: Check out the independent Atlas source
         uses: actions/checkout@v4
         with:
-          repository: jjjhenriksen/sacred-harp-dashboard
+          repository: jjjhenriksen/shapenote-atlas
           ref: main
           path: atlas-source
+          token: ${{ secrets.ATLAS_READ_TOKEN }}
 
       - name: Set up Node
         uses: actions/setup-node@v4

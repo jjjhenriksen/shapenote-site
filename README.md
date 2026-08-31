@@ -2,7 +2,7 @@
 
 This is the small publication hub for Jacqueline Henriksen's Sacred Harp projects.
 
-- `/atlas/` is built from the independent [`sacred-harp-dashboard`](https://github.com/jjjhenriksen/sacred-harp-dashboard) repository.
+- `/atlas/` is built from the independent [`shapenote-atlas`](https://github.com/jjjhenriksen/shapenote-atlas) repository.
 - `/local-ai/` points to the public fine-tuning repository and its project presentation.
 - `/hollow-square/` contains the self-contained browser game.
 
