@@ -5,7 +5,7 @@ on:
     branches: [main]
   workflow_dispatch:
   repository_dispatch:
-    types: [atlas-updated]
+    types: [atlas-updated, local-ai-updated]
 
 permissions:
   contents: read
@@ -31,6 +31,13 @@ jobs:
           path: atlas-source
           token: ${{ secrets.ATLAS_READ_TOKEN }}
 
+      - name: Check out the independent Local AI source
+        uses: actions/checkout@v4
+        with:
+          repository: jjjhenriksen/sacred-harp-finetune
+          ref: main
+          path: local-ai-source
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -47,8 +54,10 @@ jobs:
       - name: Assemble the publication
         run: |
           mkdir -p site/atlas
+          mkdir -p site/local-ai
           cp -R atlas-source/dist/. site/atlas/
-          cp -R index.html styles.css local-ai hollow-square CNAME .nojekyll site/
+          cp -R local-ai-source/presentation/. site/local-ai/
+          cp -R index.html styles.css hollow-square CNAME .nojekyll site/
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
