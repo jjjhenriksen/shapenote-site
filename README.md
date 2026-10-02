@@ -112,3 +112,92 @@ locations for missing references. This checks the current publication's static
 references, not JavaScript behavior, dynamic requests, srcset, external-link
 availability, or every application's interaction; retain separate browser
 evidence for those runtime claims.
+
+## Source update notifications
+
+The supported sender is an authenticated maintainer running `scripts/dispatch.py`.
+The current source Actions workflows run their own tests/deployments; they **do
+not send notifications to this hub**. A source push alone therefore does not
+prove a hub rebuild. After an approved update reaches source `main`, explicitly
+send its notification using the mapping below:
+
+| Source main | Sender option | Receiver event type | Published path |
+| --- | --- | --- | --- |
+| `jjjhenriksen/shapenote-atlas` | `atlas` | `atlas-updated` | `/atlas/` |
+| `jjjhenriksen/sacred-harp-finetune` | `local-ai` | `local-ai-updated` | `/local-ai/` |
+| `jjjhenriksen/hollow-square` | `hollow-square` | `hollow-square-updated` | `/hollow-square/` |
+
+The receiver is `jjjhenriksen/shapenote-site`'s `deploy-pages.yml` on its default
+branch. Each accepted event rebuilds **all three latest-main sources**, checks
+landing pages/assets, and deploys `main`. The source SHA in the request is a
+verification hint, not a checkout override. The manifest records actual
+checkout commits separately. GitHub requires the receiver workflow to exist
+on its default branch for [repository_dispatch events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#repository_dispatch).
+
+Authenticate `gh` as a maintainer authorized for the hub. A fine-grained PAT or
+GitHub App token needs **Contents: write on the hub**; a classic PAT needs the
+`repo` scope, according to the [dispatch API permission contract](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event).
+Do not put credentials in the request, source files, artifacts, or verification
+receipts. An optional future source-CI sender needs a separately configured
+hub-authorized credential; these source workflows currently have no sender,
+and this change does not provision tokens or secrets. Receiver build permissions
+remain read-only, with Pages/token write permissions limited to deployment.
+
+The helper defaults to an offline request preview and requires a full source
+SHA. `--send` instead resolves that source's current `main` via GitHub, refusing
+an explicitly supplied stale SHA before posting. Its only payload fields are
+`repository`, `sha`, and a non-secret `verification_id` (1–80 ASCII letters,
+digits, hyphens, or underscores). The receiver validates those hints and retains
+only that bounded metadata in `build-manifest.json`; extra payload fields are
+ignored. Legacy notifications with an empty payload still rebuild latest main,
+but cannot identify the requested source revision.
+
+```sh
+# Offline: use the actual full source SHA, with no network request.
+python3 scripts/dispatch.py --source atlas --sha <full-source-main-sha> \
+  --verification-id atlas-check-01
+
+# Explicit send: resolves current source main and writes a non-secret receipt.
+# Keep evidence outside the hub checkout so the checkout stays clean.
+python3 scripts/dispatch.py --source atlas --send \
+  --verification-id atlas-check-01 > /new/evidence/atlas-receipt.json
+```
+
+Repeat with `local-ai` and `hollow-square`, using a unique ID per request. Wait
+for each run to finish before sending the next: a newer `main` notification
+can cancel the previous `main` run under the publication concurrency policy.
+A receipt marked `accepted: true` proves request acceptance only, not that a
+workflow built or deployed anything.
+
+To verify an actual source update, retain the source commit and receipt, then:
+
+1. Find the new receiver run with `gh run list --repo jjjhenriksen/shapenote-site
+   --workflow deploy-pages.yml --event repository_dispatch --json databaseId,event,displayTitle,headSha,status,conclusion`.
+   Its title identifies the event type; retain the selected run ID and hub SHA.
+2. Wait for that specific run with `gh run watch <run-id> --repo
+   jjjhenriksen/shapenote-site --exit-status`. Inspect its build and deployment
+   jobs with `gh run view <run-id> --repo jjjhenriksen/shapenote-site --json
+   event,headSha,status,conclusion,jobs`. Both must succeed for publication proof.
+3. Download that run's `source-revisions` artifact using the command above.
+   Require `trigger.event == "repository_dispatch"`, the matching `trigger.type`,
+   `trigger.verification_id`, and `trigger.requested_commit` from the receipt.
+   Require `sources.hub.commit` to match the run's hub SHA, then compare the
+   corresponding `sources.atlas`, `sources.local_ai`, or `sources.hollow_square`
+   commit to the requested source SHA. Check the other source revisions too.
+   If source `main` advanced between sending and checkout, establish the
+   requested commit is included in the recorded revision or repeat the check;
+   do not claim an exact revision match from HTTP acceptance alone.
+4. Retain the receipt, run status/log, and manifest together. This proves the
+   explicit maintainer notification path for that source update. It does not
+   establish unattended source-push delivery or every application's behavior.
+
+If notification delivery is unavailable, the manual fallback is:
+
+```sh
+gh workflow run deploy-pages.yml --repo jjjhenriksen/shapenote-site --ref main
+```
+
+Find its `workflow_dispatch` run, wait for build/deployment, and retain its
+manifest with actual revisions. A manual branch run builds only and skips
+publication. An offline sender preview or a failed/canceled run is not evidence
+that the source update was published.
