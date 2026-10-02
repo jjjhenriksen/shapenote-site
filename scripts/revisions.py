@@ -48,6 +48,7 @@ def version(command: str):
 
 
 def manifest(roots: dict[str, Path], atlas_built: bool, allow_dirty: bool) -> dict:
+    from triggers import current_trigger
     if os.environ.get("ATLAS_PUBLIC_DIR"):
         raise ValueError("Unset ATLAS_PUBLIC_DIR for publication; the canonical source tree must be used")
     # Actions checks the three independent repos out beneath the hub. They are
@@ -59,6 +60,7 @@ def manifest(roots: dict[str, Path], atlas_built: bool, allow_dirty: bool) -> di
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "sources": revisions,
+        "trigger": current_trigger(),
         "build": {
             "atlas_base": "/atlas/",
             "atlas_mode": "prebuilt-unverified" if atlas_built else "npm-ci-vite-build",
