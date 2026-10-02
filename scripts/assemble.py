@@ -12,7 +12,7 @@ import tempfile
 from copy_hollow import copy_runtime, validate_source
 from revisions import manifest
 
-HUB_FILES = ("index.html", "styles.css", "CNAME", ".nojekyll")
+HUB_FILES = ("index.html", "styles.css", "favicon.ico", "CNAME", ".nojekyll")
 
 
 def require_files(root: Path, names) -> None:

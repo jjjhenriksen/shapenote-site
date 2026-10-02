@@ -3,6 +3,7 @@ name: Build and deploy Shape Note site
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
   repository_dispatch:
     types: [atlas-updated, local-ai-updated, hollow-square-updated]
@@ -56,6 +57,9 @@ jobs:
             --local-ai local-ai-source \
             --hollow-square hollow-square-source \
             --output site
+
+      - name: Check landing pages and local assets
+        run: python3 scripts/check_site.py site
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3

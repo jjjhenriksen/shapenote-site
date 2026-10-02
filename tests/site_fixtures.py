@@ -6,7 +6,7 @@ def sources(root: Path):
     hub, atlas, ai, hollow = (root / name for name in ("hub", "atlas", "local-ai", "hollow"))
     for path in (hub, atlas, ai, hollow):
         path.mkdir()
-    for name in ("index.html", "styles.css", "CNAME", ".nojekyll"):
+    for name in ("index.html", "styles.css", "favicon.ico", "CNAME", ".nojekyll"):
         (hub / name).write_text(f"Hub {name}")
     (atlas / "package.json").write_text('{"scripts":{"build":"vite build"}}')
     (atlas / "package-lock.json").write_text('{}')
