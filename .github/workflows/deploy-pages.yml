@@ -61,10 +61,9 @@ jobs:
         run: |
           mkdir -p site/atlas
           mkdir -p site/local-ai
-          mkdir -p site/hollow-square
           cp -R atlas-source/dist/. site/atlas/
           cp -R local-ai-source/presentation/. site/local-ai/
-          cp -R hollow-square-source/. site/hollow-square/
+          python3 scripts/copy_hollow.py hollow-square-source site/hollow-square
           cp -R index.html styles.css CNAME .nojekyll site/
 
       - name: Upload the site
