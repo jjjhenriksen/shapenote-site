@@ -11,18 +11,23 @@ RUNTIME_FILES = (
 )
 
 
-def copy_runtime(source: Path, destination: Path) -> None:
+def validate_source(source: Path) -> Path:
     source = source.resolve(strict=True)
-    if destination.exists() or destination.is_symlink():
-        raise FileExistsError(f"Refusing existing publication directory: {destination}")
-    if destination.resolve().is_relative_to(source):
-        raise ValueError("Publication must be outside the source checkout")
     for relative in RUNTIME_FILES:
         path = source / relative
         if any(part.is_symlink() for part in (path, *path.parents) if part != source and source in part.parents):
             raise ValueError(f"Runtime asset may not be a symlink: {relative}")
         if not path.is_file():
             raise ValueError(f"Required runtime file missing: {relative}")
+    return source
+
+
+def copy_runtime(source: Path, destination: Path) -> None:
+    source = validate_source(source)
+    if destination.exists() or destination.is_symlink():
+        raise FileExistsError(f"Refusing existing publication directory: {destination}")
+    if destination.resolve().is_relative_to(source):
+        raise ValueError("Publication must be outside the source checkout")
     destination.mkdir(parents=True, exist_ok=False)
     for relative in RUNTIME_FILES:
         target = destination / relative
