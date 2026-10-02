@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 
 def sources(root: Path):
@@ -20,4 +21,12 @@ def sources(root: Path):
         path = hollow / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"Hollow {name}")
+    for path, repository in ((hub, "shapenote-site"), (atlas, "shapenote-atlas"),
+                             (ai, "sacred-harp-finetune"), (hollow, "hollow-square")):
+        commands = [("init", "-q"), ("remote", "add", "origin", f"https://github.com/jjjhenriksen/{repository}.git"),
+                    ("add", "."), ("commit", "-qm", "Fictional publication fixture")]
+        for command in commands:
+            subprocess.run(["git", "-C", str(path), "-c", "user.name=Publication Fixture",
+                            "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false",
+                            "-c", "core.hooksPath=/dev/null", *command], check=True, capture_output=True)
     return hub, atlas, ai, hollow
