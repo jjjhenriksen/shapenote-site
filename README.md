@@ -16,6 +16,7 @@ and arbitrary extra files are excluded. Missing assets or symlink assets are
 rejected before publication; an existing output directory is preserved.
 
 Run the isolated publication regressions with
+`python3 -m pip install PyYAML==6.0.3` and
 `python3 -m unittest discover -s tests -v`. These fixtures do not deploy Pages.
 
 ## Assemble and preview locally
@@ -94,3 +95,20 @@ extras and a `--atlas-built` output are not proven by their source SHAs; the
 latter is explicitly labeled `prebuilt-unverified`. Reconstruct publications
 from fresh checkouts using a full build. Unset `ATLAS_PUBLIC_DIR` so a private
 fixture tree cannot silently replace the canonical Atlas publication source.
+
+## Pull-request validation
+
+Each PR runs the fixture regressions and the full three-source assembly, then
+`python3 scripts/check_site.py site` before uploading artifacts. The build has
+only read access to repository contents; Pages and identity-token permissions
+belong only to the separate `main` deployment job. PR refs have their own
+concurrency group and cannot cancel a `main` publication.
+
+The checker requires the hub and three landing pages and validates static
+HTML/CSS file references, including query/fragment paths, base URLs, stylesheet
+imports, and the Local AI redirect. It resolves same-CNAME URLs locally and
+skips external URLs without fetching them. It is read-only and reports file
+locations for missing references. This checks the current publication's static
+references, not JavaScript behavior, dynamic requests, srcset, external-link
+availability, or every application's interaction; retain separate browser
+evidence for those runtime claims.
