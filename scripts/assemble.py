@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the independent Atlas and assemble a new publication directory."""
 import argparse
+import json
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -9,6 +10,7 @@ import subprocess
 import tempfile
 
 from copy_hollow import copy_runtime, validate_source
+from revisions import manifest
 
 HUB_FILES = ("index.html", "styles.css", "CNAME", ".nojekyll")
 
@@ -29,8 +31,13 @@ def copy_tree(source: Path, destination: Path) -> None:
     shutil.copytree(source, destination)
 
 
+def build_atlas(atlas: Path) -> None:
+    subprocess.run(["npm", "ci", "--no-audit", "--no-fund"], cwd=atlas, check=True)
+    subprocess.run(["npm", "run", "build", "--", "--base=/atlas/"], cwd=atlas, check=True)
+
+
 def assemble(hub: Path, atlas: Path, local_ai: Path, hollow: Path,
-             output: Path, atlas_built: bool = False) -> Path:
+             output: Path, atlas_built: bool = False, allow_dirty: bool = False) -> Path:
     hub, atlas, local_ai = (path.resolve(strict=True) for path in (hub, atlas, local_ai))
     hollow = validate_source(hollow)
     output = output.absolute()
@@ -41,9 +48,10 @@ def assemble(hub: Path, atlas: Path, local_ai: Path, hollow: Path,
     require_files(hub, HUB_FILES)
     require_files(atlas, ("package.json", "package-lock.json"))
     require_files(local_ai, ("presentation/index.html",))
+    provenance = manifest({"hub": hub, "atlas": atlas, "local_ai": local_ai,
+                           "hollow_square": hollow}, atlas_built, allow_dirty)
     if not atlas_built:
-        subprocess.run(["npm", "ci", "--no-audit", "--no-fund"], cwd=atlas, check=True)
-        subprocess.run(["npm", "run", "build", "--", "--base=/atlas/"], cwd=atlas, check=True)
+        build_atlas(atlas)
     require_files(atlas, ("dist/index.html",))
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=f".{output.name}-", dir=output.parent) as temporary:
@@ -54,6 +62,7 @@ def assemble(hub: Path, atlas: Path, local_ai: Path, hollow: Path,
         copy_runtime(hollow, staged / "hollow-square")
         for name in HUB_FILES:
             shutil.copy2(hub / name, staged / name)
+        (staged / "build-manifest.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
         if output.exists() or output.is_symlink():
             raise FileExistsError(f"Output appeared during assembly: {output}")
         staged.rename(output)
@@ -75,9 +84,10 @@ if __name__ == "__main__":
     parser.add_argument("--hollow-square", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--atlas-built", action="store_true", help="Use an existing dist built with base=/atlas/")
+    parser.add_argument("--allow-dirty", action="store_true", help="Label a local preview with uncommitted inputs; SHAs alone cannot reproduce it")
     parser.add_argument("--serve", type=int, metavar="PORT", help="Serve the completed output on loopback")
     args = parser.parse_args()
-    output = assemble(args.hub, args.atlas, args.local_ai, args.hollow_square, args.output, args.atlas_built)
+    output = assemble(args.hub, args.atlas, args.local_ai, args.hollow_square, args.output, args.atlas_built, args.allow_dirty)
     print(f"Assembled publication: {output}", flush=True)
     if args.serve is not None:
         serve(output, args.serve)

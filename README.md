@@ -54,3 +54,43 @@ new backup path before rebuilding; no automatic deletion occurs. A failed
 build/copy leaves a prior output untouched and removes only its temporary
 staging directory. Actions invokes this exact assembler, rather than a second
 copy recipe.
+
+## Identify and reconstruct a publication
+
+Every assembled output contains `/build-manifest.json` with the full hub,
+Atlas, Local AI, and Hollow Square commit SHAs and fixed repository identities.
+It also records the publication base, build mode, tool versions, and whether
+the source inputs were clean. The Actions build retains this file separately
+as the `source-revisions` artifact; it is also inside the Pages artifact.
+Only a build of `main` deploys. A manual workflow run on a branch builds and
+retains artifacts with read-only repository permissions and skips deployment;
+its concurrency group cannot cancel a `main` publication.
+
+For the publication being investigated, download its manifest from the
+deployed site or the **specific** Actions run's `source-revisions` artifact:
+
+```sh
+gh run download <run-id> --repo jjjhenriksen/shapenote-site \
+  --name source-revisions --dir /new/path/to/publication-evidence
+```
+
+In a new directory, clone the four repositories named in `sources`, then
+`git checkout --detach <recorded-commit>` in each clone. Use the recorded tool
+versions and the hub at its recorded commit. From that hub checkout, run the
+documented assembler against the three detached source checkouts with a new
+output path. The assembler runs the recorded `/atlas/` build and lockfile-based
+dependency installation. Compare file bytes to the retained publication if
+exact artifact identity is required; timestamps/environment can differ, and
+commit identity alone is not a byte-for-byte guarantee. Retain the manifest,
+site artifact, and source objects if long-term availability is needed.
+
+Normal publication requires clean Git checkout roots whose origins match the
+four documented repositories. Independently checked source clones nested below
+the hub (as in Actions) are excluded from the hub's dirty check, then checked
+individually. No changes are stashed, discarded, or committed automatically.
+For an intentionally edited local preview, add `--allow-dirty`; the manifest
+labels those inputs dirty and the SHA is only their committed base. Ignored
+extras and a `--atlas-built` output are not proven by their source SHAs; the
+latter is explicitly labeled `prebuilt-unverified`. Reconstruct publications
+from fresh checkouts using a full build. Unset `ATLAS_PUBLIC_DIR` so a private
+fixture tree cannot silently replace the canonical Atlas publication source.

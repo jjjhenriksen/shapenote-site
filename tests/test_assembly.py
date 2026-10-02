@@ -25,7 +25,7 @@ class AssemblyTests(unittest.TestCase):
             root = Path(tmp)
             hub, atlas, ai, hollow = sources(root)
             (hollow / "private.txt").write_text("Exclude")
-            output = assembly.assemble(hub, atlas, ai, hollow, root / "site", atlas_built=True)
+            output = assembly.assemble(hub, atlas, ai, hollow, root / "site", atlas_built=True, allow_dirty=True)
             self.assertEqual((output / "index.html").read_bytes(), (hub / "index.html").read_bytes())
             for published, original in (("atlas/assets/app.js", atlas / "dist/assets/app.js"),
                                         ("local-ai/image.webp", ai / "presentation/image.webp"),
@@ -33,7 +33,7 @@ class AssemblyTests(unittest.TestCase):
                 self.assertEqual((output / published).read_bytes(), original.read_bytes())
             self.assertFalse((output / "hollow-square/private.txt").exists())
             self.assertEqual({p.name for p in output.iterdir()},
-                             {"index.html", "styles.css", "CNAME", ".nojekyll", "atlas", "local-ai", "hollow-square"})
+                             {"index.html", "styles.css", "CNAME", ".nojekyll", "atlas", "local-ai", "hollow-square", "build-manifest.json"})
 
     def test_preflight_and_build_failure_preserve_inputs_and_output(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -42,11 +42,11 @@ class AssemblyTests(unittest.TestCase):
             output = root / "site"
             output.mkdir()
             (output / "user.txt").write_text("Keep")
-            with patch.object(assembly.subprocess, "run", side_effect=AssertionError("Must not build")):
+            with patch.object(assembly, "build_atlas", side_effect=AssertionError("Must not build")):
                 with self.assertRaises(FileExistsError):
                     assembly.assemble(hub, atlas, ai, hollow, output)
             self.assertEqual((output / "user.txt").read_text(), "Keep")
-            with patch.object(assembly.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "npm")):
+            with patch.object(assembly, "build_atlas", side_effect=subprocess.CalledProcessError(1, "npm")):
                 with self.assertRaises(subprocess.CalledProcessError):
                     assembly.assemble(hub, atlas, ai, hollow, root / "failed")
             self.assertFalse((root / "failed").exists())
@@ -61,7 +61,7 @@ class AssemblyTests(unittest.TestCase):
             hub, atlas, ai, hollow = sources(root)
             (ai / "presentation/external.webp").symlink_to(root / "unrelated.webp")
             with self.assertRaisesRegex(ValueError, "symlink"):
-                assembly.assemble(hub, atlas, ai, hollow, root / "site", atlas_built=True)
+                assembly.assemble(hub, atlas, ai, hollow, root / "site", atlas_built=True, allow_dirty=True)
             self.assertFalse((root / "site").exists())
             self.assertEqual(sorted(p.name for p in root.iterdir()), ["atlas", "hollow", "hub", "local-ai"])
 

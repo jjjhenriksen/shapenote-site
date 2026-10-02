@@ -9,11 +9,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -64,7 +62,19 @@ jobs:
         with:
           path: site
 
+      - name: Retain exact source revisions
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-revisions
+          path: site/build-manifest.json
+          if-no-files-found: error
+
   deploy:
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
