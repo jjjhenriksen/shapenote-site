@@ -51,20 +51,13 @@ jobs:
           cache: npm
           cache-dependency-path: atlas-source/package-lock.json
 
-      - name: Build the Atlas for its publication path
-        working-directory: atlas-source
-        run: |
-          npm ci
-          npm run build -- --base=/atlas/
-
       - name: Assemble the publication
         run: |
-          mkdir -p site/atlas
-          mkdir -p site/local-ai
-          cp -R atlas-source/dist/. site/atlas/
-          cp -R local-ai-source/presentation/. site/local-ai/
-          python3 scripts/copy_hollow.py hollow-square-source site/hollow-square
-          cp -R index.html styles.css CNAME .nojekyll site/
+          python3 scripts/assemble.py \
+            --atlas atlas-source \
+            --local-ai local-ai-source \
+            --hollow-square hollow-square-source \
+            --output site
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
