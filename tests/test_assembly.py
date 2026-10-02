@@ -33,7 +33,7 @@ class AssemblyTests(unittest.TestCase):
                 self.assertEqual((output / published).read_bytes(), original.read_bytes())
             self.assertFalse((output / "hollow-square/private.txt").exists())
             self.assertEqual({p.name for p in output.iterdir()},
-                             {"index.html", "styles.css", "CNAME", ".nojekyll", "atlas", "local-ai", "hollow-square", "build-manifest.json"})
+                             {"index.html", "styles.css", "favicon.ico", "CNAME", ".nojekyll", "atlas", "local-ai", "hollow-square", "build-manifest.json"})
 
     def test_preflight_and_build_failure_preserve_inputs_and_output(self):
         with tempfile.TemporaryDirectory() as tmp:
