@@ -10,7 +10,7 @@ The GitHub Pages workflow assembles those parts at deployment time. The Atlas, L
 
 Hollow Square publication uses `scripts/copy_hollow.py` to copy only its
 `index.html`, `styles.css`, `app.js`, `artwork.js`, `harmony-data.js`, the
-marginalia stylesheet and script, the bundled Caveat font with its license and
+marginalia stylesheet and script, the bundled handwriting fonts with their licenses and
 source notice, and the vendored OpenSheetMusicDisplay script plus its license notice. Repository
 metadata, tests, package/development configuration, installed dependencies,
 and arbitrary extra files are excluded. Missing assets or symlink assets are

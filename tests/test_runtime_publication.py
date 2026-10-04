@@ -14,6 +14,8 @@ def fixture(root):
                  "marginalia.css", "marginalia.js",
                  "assets/fonts/Caveat-notes.woff2", "assets/fonts/Caveat-OFL.txt",
                  "assets/fonts/Caveat-SOURCE.txt",
+                 "assets/fonts/LaBelleAurore-notes.ttf", "assets/fonts/LaBelleAurore-OFL.txt",
+                 "assets/fonts/LaBelleAurore-SOURCE.txt",
                  "vendor/opensheetmusicdisplay.min.js", "vendor/opensheetmusicdisplay.min.js.LICENSE.txt"):
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -37,6 +39,8 @@ class RuntimePublicationTests(unittest.TestCase):
                  "marginalia.css", "marginalia.js",
                  "assets/fonts/Caveat-notes.woff2", "assets/fonts/Caveat-OFL.txt",
                  "assets/fonts/Caveat-SOURCE.txt",
+                 "assets/fonts/LaBelleAurore-notes.ttf", "assets/fonts/LaBelleAurore-OFL.txt",
+                 "assets/fonts/LaBelleAurore-SOURCE.txt",
                                         "vendor/opensheetmusicdisplay.min.js", "vendor/opensheetmusicdisplay.min.js.LICENSE.txt"})
             for name in published:
                 self.assertEqual((source / name).read_bytes(), (output / name).read_bytes())
