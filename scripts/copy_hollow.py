@@ -6,6 +6,10 @@ import shutil
 
 RUNTIME_FILES = (
     "index.html", "styles.css", "app.js", "artwork.js", "harmony-data.js",
+    "marginalia.css", "marginalia.js",
+    "assets/fonts/Caveat-notes.woff2",
+    "assets/fonts/Caveat-OFL.txt",
+    "assets/fonts/Caveat-SOURCE.txt",
     "vendor/opensheetmusicdisplay.min.js",
     "vendor/opensheetmusicdisplay.min.js.LICENSE.txt",
 )

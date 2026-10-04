@@ -11,6 +11,9 @@ spec.loader.exec_module(hollow)
 
 def fixture(root):
     for name in ("index.html", "styles.css", "app.js", "artwork.js", "harmony-data.js",
+                 "marginalia.css", "marginalia.js",
+                 "assets/fonts/Caveat-notes.woff2", "assets/fonts/Caveat-OFL.txt",
+                 "assets/fonts/Caveat-SOURCE.txt",
                  "vendor/opensheetmusicdisplay.min.js", "vendor/opensheetmusicdisplay.min.js.LICENSE.txt"):
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -31,6 +34,9 @@ class RuntimePublicationTests(unittest.TestCase):
             hollow.copy_runtime(source, output)
             published = {str(p.relative_to(output)) for p in output.rglob("*") if p.is_file()}
             self.assertEqual(published, {"index.html", "styles.css", "app.js", "artwork.js", "harmony-data.js",
+                 "marginalia.css", "marginalia.js",
+                 "assets/fonts/Caveat-notes.woff2", "assets/fonts/Caveat-OFL.txt",
+                 "assets/fonts/Caveat-SOURCE.txt",
                                         "vendor/opensheetmusicdisplay.min.js", "vendor/opensheetmusicdisplay.min.js.LICENSE.txt"})
             for name in published:
                 self.assertEqual((source / name).read_bytes(), (output / name).read_bytes())
