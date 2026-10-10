@@ -31,6 +31,50 @@ def publication(root):
 
 
 class SiteValidationTests(unittest.TestCase):
+    def test_missing_responsive_images_fail_even_with_a_valid_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            publication(root)
+            with (root / "local-ai/detail.html").open("a") as file:
+                file.write('\n<picture><source srcset="missing-small.webp 320w, missing-large.webp 960w">'
+                           '<img src="image%20one.png" srcset="image%20one.png 1x, missing-retina.png 2x"></picture>'
+                           '\n<link rel="preload" as="image" imagesrcset="missing-preload.png 1x">')
+            issues = check(root)["issues"]
+            self.assertEqual({issue["reference_path"] for issue in issues}, {
+                "/local-ai/missing-small.webp", "/local-ai/missing-large.webp",
+                "/local-ai/missing-retina.png", "/local-ai/missing-preload.png"})
+            self.assertTrue(all(issue["file"] == "local-ai/detail.html" and issue["line"] >= 2 for issue in issues))
+
+    def test_responsive_candidates_keep_commas_urls_bases_and_external_skips(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            publication(root)
+            (root / "CNAME").write_text("example.invalid\n")
+            (root / "local-ai/image,wide.png").write_text("Asset")
+            (root / "local-ai/detail.html").write_text(
+                '<html><title>Responsive images</title><base href="/local-ai/">'
+                '<img srcset="image%20one.png 1x, image,wide.png 2x">'
+                '<img srcset="data:image/svg+xml,%3Csvg%3E,%3C/svg%3E 1x, image%20one.png 2x">'
+                '<img srcset="image%20one.png, \n image,wide.png 2x">'
+                '<link rel="preload" as="image" imagesrcset="https://example.invalid/local-ai/image%20one.png?v=2#crop 1x, '
+                'https://external.invalid/not-fetched.png 2x">'
+                '</html>')
+            self.assertEqual(check(root)["issues"], [])
+
+    def test_responsive_encoded_escapes_and_asset_symlinks_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "site"
+            root.mkdir()
+            publication(root)
+            outside = Path(tmp) / "outside.png"
+            outside.write_text("Unrelated asset")
+            (root / "local-ai/outside.png").symlink_to(outside)
+            with (root / "index.html").open("a") as file:
+                file.write('<img srcset="/%2e%2e/outside.png 1x, /local-ai/outside.png 2x">')
+            issues = check(root)["issues"]
+            self.assertEqual(len(issues), 2)
+            self.assertTrue(all(issue["issue"] == "Missing/outside local reference" for issue in issues))
+
     def test_all_routes_assets_queries_css_and_external_skips(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
