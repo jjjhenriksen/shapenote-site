@@ -107,10 +107,11 @@ concurrency group and cannot cancel a `main` publication.
 
 The checker requires the hub and three landing pages and validates static
 HTML/CSS file references, including query/fragment paths, base URLs, stylesheet
-imports, and the Local AI redirect. It resolves same-CNAME URLs locally and
+imports, responsive image `srcset`/`imagesrcset` candidates, and the Local AI redirect. It resolves same-CNAME URLs locally and
 skips external URLs without fetching them. It is read-only and reports file
 locations for missing references. This checks the current publication's static
-references, not JavaScript behavior, dynamic requests, srcset, external-link
+references, not JavaScript behavior, dynamic requests, responsive descriptor validity
+or browser image selection, external-link
 availability, or every application's interaction; retain separate browser
 evidence for those runtime claims.
 

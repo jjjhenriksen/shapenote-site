@@ -13,6 +13,41 @@ from urllib.parse import unquote, urljoin, urlsplit
 LANDINGS = ("index.html", "atlas/index.html", "local-ai/index.html", "hollow-square/index.html")
 
 
+def srcset_references(text):
+    """Extract candidate URLs without treating commas inside a URL as separators.
+
+    Follow the URL/descriptor tokenization in the HTML srcset parsing algorithm.
+    This checks referenced files, not descriptor validity or browser selection.
+    https://html.spec.whatwg.org/multipage/images.html#parse-a-srcset-attribute
+    """
+    whitespace = " \t\n\r\f"
+    position = 0
+    while position < len(text):
+        while position < len(text) and text[position] in whitespace + ",":
+            position += 1
+        start = position
+        while position < len(text) and text[position] not in whitespace:
+            position += 1
+        url = text[start:position]
+        if not url:
+            break
+        if url.endswith(","):
+            yield url.rstrip(",")
+            continue
+        yield url
+        # Commas delimit descriptors, except inside a parenthesized descriptor.
+        in_parentheses = False
+        while position < len(text):
+            character = text[position]
+            position += 1
+            if character == ")":
+                in_parentheses = False
+            elif character == "(":
+                in_parentheses = True
+            elif character == "," and not in_parentheses:
+                break
+
+
 def css_references(text):
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     for match in re.finditer(r"url\(\s*(['\"]?)(.*?)\1\s*\)", text, flags=re.I | re.S):
@@ -43,6 +78,9 @@ class References(HTMLParser):
                     self.references.append((self.getpos()[0], attributes[name]))
             if tag == "object" and attributes.get("data"):
                 self.references.append((self.getpos()[0], attributes["data"]))
+        for name in ("srcset", "imagesrcset"):
+            if attributes.get(name):
+                self.references.extend((self.getpos()[0], ref) for ref in srcset_references(attributes[name]))
         if attributes.get("style"):
             self.references.extend((self.getpos()[0], ref) for ref in css_references(attributes["style"]))
         if tag == "meta" and attributes.get("http-equiv", "").lower() == "refresh":
@@ -104,7 +142,7 @@ def check(root: Path) -> dict:
             if not target.is_relative_to(root) or not target.is_file():
                 issues.append({"file": relative, "line": line, "reference_path": url.path,
                                "issue": "Missing/outside local reference"})
-    return {"scope": "Landing HTML and static src/href/poster/object/meta-refresh/CSS references; external URLs and dynamic JavaScript/srcset requests not executed",
+    return {"scope": "Landing HTML and static src/srcset/imagesrcset/href/poster/object/meta-refresh/CSS references; external URLs and dynamic JavaScript requests not executed; responsive descriptors and browser selection not validated",
             "html_css_documents": len(documents), "local_references_checked": checked, "issues": issues}
 
 
